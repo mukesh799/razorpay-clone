@@ -1,6 +1,7 @@
 package com.project.razorpay.operations.entity;
 
 
+import com.project.razorpay.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -17,7 +18,7 @@ import java.util.UUID;
 @Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class DlqEvent  {
+public class DlqEvent extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

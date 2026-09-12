@@ -1,6 +1,7 @@
 package com.project.razorpay.operations.entity;
 
 
+import com.project.razorpay.common.entity.BaseEntity;
 import com.project.razorpay.common.enums.WebhookEventStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,7 +19,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class WebhookEvent  {
+public class WebhookEvent extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
