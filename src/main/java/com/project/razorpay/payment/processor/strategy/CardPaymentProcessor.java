@@ -1,14 +1,35 @@
 package com.project.razorpay.payment.processor.strategy;
 
 
+import com.project.razorpay.common.util.RandomizerUtil;
 import com.project.razorpay.payment.processor.PaymentProcessor;
 import com.project.razorpay.payment.processor.dto.PaymentProcessorRequest;
 import com.project.razorpay.payment.processor.dto.PaymentProcessorResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
 
+@Slf4j
+@Component
 public class CardPaymentProcessor implements PaymentProcessor {
+
+    public static final String PAN_CARD_DECLINED = "";
+    public static final String PAN_CARD_EXPIRED = "";
 
     @Override
     public PaymentProcessorResponse charge(PaymentProcessorRequest request) {
-        return null;
+        String pan = request.pan();
+        if(PAN_CARD_DECLINED.equals(pan)){
+            log.warn("Card declined");
+            return new PaymentProcessorResponse.Failure("CARD_DECLINED", "Card declined by bank");
+        }
+        if(PAN_CARD_EXPIRED.equals(pan)){
+            log.warn("Card expired");
+            return new PaymentProcessorResponse.Failure("CARD_EXPIRED", "Card expired");
+        }
+
+        String processorRef = "CARD_PROCESSOR_"+ RandomizerUtil.randomBase64(16);
+
+        return new PaymentProcessorResponse.Pending(processorRef);
     }
 }
