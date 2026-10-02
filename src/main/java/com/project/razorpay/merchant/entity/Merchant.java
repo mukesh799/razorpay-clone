@@ -39,7 +39,7 @@ public class Merchant extends BaseEntity {
 
     @Column(length = 200,nullable = false)
     @Enumerated(EnumType.STRING)
-    private MerchantStatus status=MerchantStatus.PENDEIND_KYC;
+    private MerchantStatus status=MerchantStatus.PENDING_KYC;
     @Column(length = 20)
     private String gstId;
     @Column(length = 20)

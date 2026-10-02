@@ -4,46 +4,75 @@ import com.project.razorpay.common.enums.MerchantStatus;
 import com.project.razorpay.common.enums.UserRole;
 import com.project.razorpay.common.exceptions.DuplicateResourceException;
 
+import com.project.razorpay.common.exceptions.ResourceNotFoundException;
+import com.project.razorpay.merchant.dto.request.LoginRequest;
 import com.project.razorpay.merchant.dto.request.MerchantSignupRequest;
+import com.project.razorpay.merchant.dto.response.LoginResponse;
 import com.project.razorpay.merchant.dto.response.MerchantResponse;
 import com.project.razorpay.merchant.entity.AppUser;
 import com.project.razorpay.merchant.entity.Merchant;
 import com.project.razorpay.merchant.mapper.MerchantMapper;
 import com.project.razorpay.merchant.repository.AppUserRepository;
 import com.project.razorpay.merchant.repository.MerchantRepository;
+import com.project.razorpay.merchant.security.JwtUtil;
 import com.project.razorpay.merchant.services.AuthService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
 
     private final AppUserRepository appUserRepository;
     private final MerchantRepository merchantRepository;
     private final MerchantMapper merchantMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
 
     @Override
     @Transactional
     public MerchantResponse signup(MerchantSignupRequest request) {
-        if(merchantRepository.existsByEmail(request.email())){
-            throw new DuplicateResourceException("DUPLICATE_MERCHANT", "Merchant with email already exists");
+        if (merchantRepository.existsByEmail(request.email())) {
+            throw new DuplicateResourceException("DUPLICATE_MERCHANT_EMAIL",
+                    "Merchant with email already exists: " + request.email());
         }
-        Merchant merchant=merchantMapper.toEntityFromSignUpRequest(request);
-        merchant.setStatus(MerchantStatus.PENDEIND_KYC);
-        merchant=merchantRepository.save(merchant);
 
-        AppUser appUser=AppUser.builder()
+        Merchant merchant = merchantMapper.toEntityFromSignUpRequest(request);
+        merchant.setStatus(MerchantStatus.PENDING_KYC);
+
+        merchant = merchantRepository.save(merchant);
+
+        AppUser appUser = AppUser.builder()
                 .email(request.email())
-                .passwordHash(request.password())
-                .role(UserRole.OWNER)
                 .merchant(merchant)
+                .passwordHash(passwordEncoder.encode(request.password()))
+                .role(UserRole.OWNER)
                 .build();
         appUserRepository.save(appUser);
 
         return merchantMapper.toResponse(merchant);
     }
 
+    @Override
+    public LoginResponse login(LoginRequest request) {
 
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.email(), request.password())
+        );
+
+        AppUser appUser = appUserRepository.findByEmail(request.email())
+                .orElseThrow(() -> new ResourceNotFoundException("User", request.email()));
+
+        String token = jwtUtil.generateAccessToken(request.email(), appUser.getMerchant().getId(), appUser.getRole().toString());
+
+        return new LoginResponse(token);
+    }
 }
+

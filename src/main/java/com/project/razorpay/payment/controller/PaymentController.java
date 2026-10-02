@@ -20,7 +20,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    UUID merchantId = UUID.fromString("f3e1c8b0-9c4a-4d5e-8f2b-1a2b3c4d5e6f"); // Replace with your actual merchant ID
+    UUID merchantId = UUID.fromString("1f6caca9-cab9-40cd-a491-a714146e5a55"); // Replace with your actual merchant ID
 
     @PostMapping
     public ResponseEntity<PaymentResponse> initiate(@Valid @RequestBody PaymentInitRequest request){
