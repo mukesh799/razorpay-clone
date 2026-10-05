@@ -16,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     private final MerchantRepository merchantRepository;
     private final ApiKeyMapper apiKeyMapper;
+    private final BCryptPasswordEncoder BCRPYT =new BCryptPasswordEncoder();
 
     private final ApiKeyRepository apiKeyRepository;
     @Override
@@ -41,7 +44,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         ApiKey apiKey=ApiKey.builder()
                 .keyId(keyId)
                 .merchant(merchant)
-                .keySecretHash(rawSecret)
+                .keySecretHash(BCRPYT.encode(rawSecret))
                 .environment(request.environment())
                 .build();
         apiKey=apiKeyRepository.save(apiKey);
@@ -75,7 +78,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
         String newRawSecret = RandomizerUtil.randomBase64(40);
         apiKey.setPreviousKeySecretHash(apiKey.getKeySecretHash());
-        apiKey.setKeySecretHash(newRawSecret);  // TODO: encode with BcryptPasswordEncoder
+        apiKey.setKeySecretHash(BCRPYT.encode(newRawSecret));
         apiKey.setRotatedAt(LocalDateTime.now());
         apiKey.setGracePeriodExpiresAt(LocalDateTime.now().plusHours(24));
         apiKey = apiKeyRepository.save(apiKey);
