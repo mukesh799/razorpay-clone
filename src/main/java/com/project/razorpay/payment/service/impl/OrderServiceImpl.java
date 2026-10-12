@@ -5,6 +5,7 @@ import com.project.razorpay.common.enums.OrderStatus;
 import com.project.razorpay.common.exceptions.BusinessRuleViolationException;
 import com.project.razorpay.common.exceptions.DuplicateResourceException;
 import com.project.razorpay.common.exceptions.ResourceNotFoundException;
+import com.project.razorpay.merchant.services.CustomerService;
 import com.project.razorpay.payment.dto.request.CreateOrderRequest;
 import com.project.razorpay.payment.dto.response.OrderResponse;
 import com.project.razorpay.payment.dto.response.PaymentResponse;
@@ -28,20 +29,32 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
     private final OrderMapper orderMapper;
+    private final CustomerService customerService;
 
     @Value("${payment.order.default-order-expiry-minutes:30}")
     private int defaultOrderExpiryMinutes;
 
     @Override
+    @Transactional
     public OrderResponse create(UUID merchantId, CreateOrderRequest request) {
         if (request.receipt() != null && orderRepository.existsByMerchantIdAndReceipt(merchantId, request.receipt())) {
             throw new DuplicateResourceException("ORDER_RECEIPT_DUPLICATE", "Order with receipt already exists: " + request.receipt());
+        }
+
+        UUID customerId = null;
+        if (request.customer() != null) {
+            customerId = customerService.findOrCreate(merchantId,
+                    request.customer().email(),
+                    request.customer().name(),
+                    request.customer().phone()
+            );
         }
 
         OrderRecord order = OrderRecord.builder()
@@ -50,6 +63,7 @@ public class OrderServiceImpl implements OrderService {
                 .notes(request.notes())
 
                 .merchantId(merchantId)
+                .customerId(customerId)
                 .orderStatus(OrderStatus.CREATED)
                 .expiresAt(request.expiresAt() != null ? request.expiresAt() :
                         LocalDateTime.now().plusMinutes(defaultOrderExpiryMinutes))
@@ -59,12 +73,7 @@ public class OrderServiceImpl implements OrderService {
 
 // TODO:        publish kafka event about order creation
 
-        return new OrderResponse(order.getId(),
-                order.getMerchantId(),
-                order.getReceipt(), order.getAmount(),
-                order.getOrderStatus(), order.getAttempts(),
-                order.getNotes(), order.getExpiresAt(),
-                null);
+        return orderMapper.toResponse(order);
     }
 
     @Override

@@ -28,6 +28,7 @@ public class VaultCard extends BaseEntity {
     @Column(nullable = false)
     private byte[] encryptedDek;
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private CardBrand brand;
     @Column(nullable = false)
     private String expiryMonth;

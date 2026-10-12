@@ -2,6 +2,7 @@ package com.project.razorpay.merchant.entity;
 
 import com.project.razorpay.common.entity.BaseEntity;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,21 +12,29 @@ import java.util.UUID;
         @Index(name = "idx_customer_merchant_id", columnList = "merchant_id"),
         @Index(name = "idx_customer_email", columnList = "email")
 })
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class Customer  extends BaseEntity {
 
-public class Customer extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "merchant_id",nullable = false)
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "merchant_id", nullable = false)
     private Merchant merchant;
 
     @Column(length = 200)
     private String name;
-    @Column(length = 200,nullable = false)
+
+    @Column(length = 200)
     private String email;
+
     @Column(length = 20)
-    private String contactNumber;
-    @Column(name = "deleted_at")
+    private String phone;
+
     private LocalDateTime deletedAt;
 }

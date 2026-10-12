@@ -37,6 +37,7 @@ public class VaultServiceImpl implements VaultService {
     private final VaultCardRepository vaultCardRepository;
     private final BytesEncryptor dekEncrypter;
     private final PaymentProcessorRouter paymentProcessorRouter;
+
     @Override
     @Transactional
     public TokenizeResponse tokenize(TokenizeRequest request, UUID merchantId) {
@@ -72,7 +73,9 @@ public class VaultServiceImpl implements VaultService {
 
         return new TokenizeResponse(token, lastFour, cardBrand, request.expiryMonth(), request.expiryYear());
     }
+
     @Override
+    @Transactional
     public PaymentProcessorResponse charge(UUID paymentId, String token,
                                            Money amount, Map<String, Object> methodDetails) {
         CardToken cardToken = cardTokenRepository.findByTokenAndRevokedAtIsNull(token)
@@ -103,6 +106,7 @@ public class VaultServiceImpl implements VaultService {
             if (panBytes != null) Arrays.fill(panBytes, (byte) 0);
         }
     }
+
     private CardBrand detectBrand(String pan) {
         if (pan.startsWith("4")) return CardBrand.VISA;
         if (pan.startsWith("5") || pan.startsWith("2")) return CardBrand.MASTERCARD;
