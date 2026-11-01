@@ -33,6 +33,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   kafka:
+    listener:
+      ack-mode: manual
     bootstrap-servers: ${KAFKA_BROKERS:localhost:29092}
     producer:
       acks: all
@@ -50,9 +52,13 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "com.codingshuttle.razorpay.*"
+        spring.json.trusted.packages: "com.project.razorpay.*"
         spring.json.use.type.headers: false
         spring.json.value.default.type: java.util.LinkedHashMap
+
+thread:
+  virtual:
+    enabled: true
 
 vault:
   master-key: NqcfbJG1zkOfBsNF/wPmlLA7aaOvh9RCHTYYgY/9A2Q=

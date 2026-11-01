@@ -16,7 +16,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/v1/merchants/webhooks")
 @RequiredArgsConstructor
-public class WebhookConfigContoller {
+public class WebhookConfigController {
 
     private final WebhookConfigService webhookConfigService;
     private final MerchantContext merchantContext;
@@ -47,6 +47,5 @@ public class WebhookConfigContoller {
         webhookConfigService.delete(merchantContext.getMerchantId(), id);
         return ResponseEntity.noContent().build();
     }
-
 
 }

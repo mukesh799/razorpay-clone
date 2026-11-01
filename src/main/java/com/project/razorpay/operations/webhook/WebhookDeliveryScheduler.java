@@ -4,6 +4,8 @@ package com.project.razorpay.operations.webhook;
 import com.project.razorpay.common.enums.WebhookEventStatus;
 import com.project.razorpay.operations.entity.WebhookEvent;
 import com.project.razorpay.operations.repository.WebhookEventRepository;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +16,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @Component
@@ -22,9 +26,20 @@ public class WebhookDeliveryScheduler {
 
     private final WebhookRetryQueue retryQueue;
     private final WebhookEventRepository webhookEventRepository;
-
+    private final WebhookDeliverExecutor deliverExecutor;
+    private ExecutorService virtualThreadExecutor;
     @Value("${app.webhook.delivery.poll-batch-size:100}")
     private int batchSize = 100;
+
+    @PostConstruct
+    void init(){
+        virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
+    }
+
+    @PreDestroy
+    void shutdown() {
+        virtualThreadExecutor.shutdown();
+    }
 
 
     @Scheduled(fixedDelay = 1000)
@@ -34,7 +49,10 @@ public class WebhookDeliveryScheduler {
         if (due.isEmpty()) return;
 
         for (UUID webhookEventId: due) {
-//            executor.deliver(webhookEventId)
+            virtualThreadExecutor.submit(()->{
+                deliverExecutor.deliver(webhookEventId);
+            });
+
         }
     }
 
