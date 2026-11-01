@@ -1,6 +1,5 @@
 package com.project.razorpay.operations.entity;
 
-import com.project.razorpay.common.entity.BaseEntity;
 import jakarta.persistence.Embeddable;
 import lombok.*;
 
