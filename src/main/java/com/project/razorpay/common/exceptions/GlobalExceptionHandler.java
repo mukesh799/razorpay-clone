@@ -1,6 +1,7 @@
 package com.project.razorpay.common.exceptions;
 
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,6 +49,12 @@ public class GlobalExceptionHandler {
                         Instant.now().plusSeconds(ex.getRetryAfterSeconds()).getEpochSecond()
                 ))
                 .body(ErrorResponse.of("RATE_LIMIT_EXCEEDED", ex.getMessage()));
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ErrorResponse> handleJwtException(JwtException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of("INVALID_TOKEN", "Invalid or expired token"));
     }
 
 
